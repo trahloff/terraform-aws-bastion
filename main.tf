@@ -156,7 +156,7 @@ resource "aws_route53_record" "bastion_record_name" {
   name    = var.bastion_record_name
   zone_id = var.hosted_zone_name
   type    = "A"
-  count   = var.create_dns_record
+  count   = var.create_dns_record ? 1 : 0 
 
   alias {
     evaluate_target_health = true
@@ -169,7 +169,7 @@ resource "aws_lb" "bastion_lb" {
   internal = var.is_lb_private
   name     = "${local.name_prefix}-lb"
 
-  subnets = var.elb_subnets
+  subnets = flatten(var.elb_subnets)
 
   load_balancer_type = "network"
   tags               = merge(var.tags)
@@ -255,16 +255,16 @@ resource "aws_autoscaling_group" "bastion_auto_scaling_group" {
   # If the expression in the following list itself returns a list, remove the
   # brackets to avoid interpretation as a list of lists. If the expression
   # returns a single list item then leave it as-is and remove this TODO comment.
-  tags = concat(
-      [
-        {
-          "key"                 = "Name"
-          "value"               = "ASG-${aws_launch_configuration.bastion_launch_configuration.name}"
-          "propagate_at_launch" = true
-        },
-      ],
-      local.tags_asg_format,
-    )
+  # tags = concat(
+  #     [
+  #       {
+  #         "key"                 = "Name"
+  #         "value"               = "ASG-${aws_launch_configuration.bastion_launch_configuration.name}"
+  #         "propagate_at_launch" = true
+  #       },
+  #     ],
+  #     local.tags_asg_format,
+  #   )
   
 
   lifecycle {
